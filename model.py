@@ -90,6 +90,3 @@ class YoloV1(nn.Module):
 #     x = torch.randn((2,3,448,448))
 #     print(model(x).shape)
 # test()
-
-
-
