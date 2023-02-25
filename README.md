@@ -10,3 +10,4 @@
   + Thuật toán NMS thường được áp dụng sau khi mô hình đã dự đoán được các bounding box chứa đối tượng trên ảnh đầu vào. Quá trình này tạo ra nhiều bounding box gần giống nhau tại một vị trí và kích thước khác nhau.
   + Trong quá trình loại bỏ, thuật toán sẽ giữ lại bounding box có độ tin cậy cao nhất và loại bỏ tất cả các bounding box khác có IOU với bounding box đó vượt qua ngưỡng xác định.
   + Kết quả của thuật toán NMS là tập hợp các bounding box không trùng lặp với độ tin cậy cao nhất, tạo ra một đầu ra chính xác hơn và dễ đọc hơn.
+> Datasets **[Link](https://www.kaggle.com/code/kerneler/starter-pascalvoc-yolo-157cb3d6-0/data?select=train.csv)**
