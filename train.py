@@ -10,24 +10,44 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from model import YoloV1
 from dataset import YOLODataset
-from utils import *
+import torch
+import torchvision.transforms as transforms
+import torch.optim as optim
+import torchvision.transforms.functional as FT
+from tqdm import tqdm
+from torch.utils.data import DataLoader
 from loss import YoloLoss
+
+from utils import (
+    non_max_suppression,
+    mean_average_precision,
+    intersection_over_union,
+    cellboxes_to_boxes,
+    get_bboxes,
+    plot_image,
+    save_checkpoint,
+    load_checkpoint,
+)
 
 seed = 123
 torch.manual_seed(seed)
 
-# Hyperparameters etc. 
-DEVICE = "cuda" if torch.cuda.is_available else "cpu"
-LEARNING_RATE = 2e-5
-BATCH_SIZE = 16 
-WEIGHT_DECAY = 0
-EPOCHS = 1000
-NUM_WORKERS = 2
-PIN_MEMORY = True
-LOAD_MODEL = False
 LOAD_MODEL_FILE = "overfit.pth.tar"
 IMG_DIR = "data/images"
 LABEL_DIR = "data/labels"
+TRAIN_DATASET_CSV = "data/100examples.csv"
+TRAIN_DIR = "data/train.csv"
+TEST_DATASET_CSV = "data/test.csv"
+
+# Hyperparameters etc. 
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+LEARNING_RATE = 2e-5
+BATCH_SIZE = 16 
+WEIGHT_DECAY = 0
+EPOCHS = 20
+NUM_WORKERS = 2
+PIN_MEMORY = True
+LOAD_MODEL = False
 
 # Tranform data
 class Compose(object):
@@ -37,7 +57,6 @@ class Compose(object):
     def __call__(self, img, bboxes):
         for t in self.transforms:
             img, bboxes = t(img), bboxes
-
         return img, bboxes
 
 
@@ -74,14 +93,17 @@ def main():
         load_checkpoint(torch.load(LOAD_MODEL_FILE), model, optimizer)
 
     train_dataset = YOLODataset(
-        "data/100examples.csv",
+        "data/8examples.csv",
         transform=transform,
         img_dir=IMG_DIR,
         label_dir=LABEL_DIR,
     )
 
     test_dataset = YOLODataset(
-        "data/test.csv", transform=transform, img_dir=IMG_DIR, label_dir=LABEL_DIR,
+        "data/test.csv", 
+        transform=transform, 
+        img_dir=IMG_DIR, 
+        label_dir=LABEL_DIR,
     )
 
     train_loader = DataLoader(
@@ -90,7 +112,7 @@ def main():
         num_workers=NUM_WORKERS,
         pin_memory=PIN_MEMORY,
         shuffle=True,
-        drop_last=True,
+        drop_last=False,
     )
 
     test_loader = DataLoader(
@@ -103,33 +125,15 @@ def main():
     )
 
     for epoch in range(EPOCHS):
-        # for x, y in train_loader:
-        #    x = x.to(DEVICE)
-        #    for idx in range(8):
-        #        bboxes = cellboxes_to_boxes(model(x))
-        #        bboxes = non_max_suppression(bboxes[idx], iou_threshold=0.5, threshold=0.4, box_format="midpoint")
-        #        plot_image(x[idx].permute(1,2,0).to("cpu"), bboxes)
-
-        #    import sys
-        #    sys.exit()
 
         pred_boxes, target_boxes = get_bboxes(
-            train_loader, model, iou_threshold=0.5, threshold=0.4
+            train_loader, model, iou_threshold=0.5, threshold=0.4, device=DEVICE 
         )
 
         mean_avg_prec = mean_average_precision(
             pred_boxes, target_boxes, iou_threshold=0.5, box_format="midpoint"
         )
         print(f"Train mAP: {mean_avg_prec}")
-
-        #if mean_avg_prec > 0.9:
-        #    checkpoint = {
-        #        "state_dict": model.state_dict(),
-        #        "optimizer": optimizer.state_dict(),
-        #    }
-        #    save_checkpoint(checkpoint, filename=LOAD_MODEL_FILE)
-        #    import time
-        #    time.sleep(10)
 
         train_fn(train_loader, model, optimizer, loss_fn)
 
