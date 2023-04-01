@@ -1,5 +1,10 @@
 # YOLOv1-Implemetation-From-Scratch-Pytorch
 
+### Architecture YOLOV1:
+![Architecture](https://github.com/denotevn/YOLOv1-Implemetation-From-Scratch-Pytorch/blob/main/images/architectures.png)
+
+### Result train with 20 epochs:
+![result](https://github.com/denotevn/YOLOv1-Implemetation-From-Scratch-Pytorch/blob/main/images/Result.png)
 
 ### **Intersection Over Union (IoU)**
   + IOU (Intersection over Union) is a metric commonly used to evaluate the performance of object detection algorithms. It measures the overlap between the predicted bounding box and the ground truth bounding box of an object in an image.
